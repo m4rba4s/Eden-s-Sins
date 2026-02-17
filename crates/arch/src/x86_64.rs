@@ -197,6 +197,22 @@ fn enc_jmp_rel(off: i32) -> Vec<EncodedInstruction> {
     v
 }
 
+// ── Call/Jump via Label (Fixups) ──────────────────────────────────
+
+fn enc_call_label(target: &str) -> Vec<EncodedInstruction> {
+    let op = SemanticOp::CallLabel { target: target.to_string() };
+    // E8 rel32 (placeholder 0)
+    let b = vec![0xE8, 0, 0, 0, 0];
+    vec![EncodedInstruction::new(&b, op)]
+}
+
+fn enc_jmp_label(target: &str) -> Vec<EncodedInstruction> {
+    let op = SemanticOp::JmpLabel { target: target.to_string() };
+    // E9 rel32 (placeholder 0)
+    let b = vec![0xE9, 0, 0, 0, 0]; // Far jump preferred for labels
+    vec![EncodedInstruction::new(&b, op)]
+}
+
 fn enc_syscall() -> Vec<EncodedInstruction> {
     vec![EncodedInstruction::new(&[0x0F, 0x05], SemanticOp::Syscall)]
 }
@@ -221,12 +237,30 @@ impl InstructionCodec for Codec {
             SemanticOp::Ret => enc_ret(),
             SemanticOp::CallRel { offset } => enc_call_rel(*offset),
             SemanticOp::JmpRel { offset } => enc_jmp_rel(*offset),
+            SemanticOp::CallLabel { target } => enc_call_label(target),
+            SemanticOp::JmpLabel { target } => enc_jmp_label(target),
             SemanticOp::Syscall => enc_syscall(),
         }
     }
 
     fn decode(&self, bytes: &[u8]) -> Result<(SemanticOp, usize), DecodeError> {
         decode(bytes)
+    }
+
+    fn patch_relocation(&self, bytes: &mut [u8], instr_offset: usize, target_offset: usize) {
+        if bytes.len() < 5 { return; }
+        // Check opcode: E8 (CALL) or E9 (JMP)
+        match bytes[0] {
+             0xE8 | 0xE9 => {
+                 // RIP-relative: target - (current + 5)
+                 let current_end = instr_offset + 5;
+                 let delta = (target_offset as isize) - (current_end as isize);
+                 // TODO: Check constraints? Assuming i32 range for now.
+                 let delta_i32 = delta as i32;
+                 bytes[1..5].copy_from_slice(&delta_i32.to_le_bytes());
+             }
+             _ => {} // Not a relative instruction we fix up here
+        }
     }
 }
 

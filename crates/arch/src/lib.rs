@@ -5,6 +5,7 @@
 //! = the foundation of polymorphism.
 
 pub mod x86_64;
+pub mod aarch64;
 
 /// Maximum encoded instruction length (x86_64 = 15 bytes).
 pub const MAX_INSTR_LEN: usize = 15;
@@ -48,6 +49,10 @@ pub enum SemanticOp {
     CallRel { offset: i32 },
     /// Relative jump.
     JmpRel { offset: i32 },
+    /// Call semantic target by name (resolved by transcriber).
+    CallLabel { target: String },
+    /// Jump to semantic target by name.
+    JmpLabel { target: String },
     /// System call.
     Syscall,
 }
@@ -94,4 +99,10 @@ pub trait InstructionCodec {
 
     /// Decode raw bytes into a semantic operation + bytes consumed.
     fn decode(&self, bytes: &[u8]) -> Result<(SemanticOp, usize), DecodeError>;
+
+    /// Patch a relative instruction (Call/Jmp) at a given position.
+    /// `bytes`: The buffer containing the instruction (mutable).
+    /// `instr_offset`: absolute offset of the instruction in the buffer.
+    /// `target_offset`: absolute offset of the target.
+    fn patch_relocation(&self, bytes: &mut [u8], instr_offset: usize, target_offset: usize);
 }
