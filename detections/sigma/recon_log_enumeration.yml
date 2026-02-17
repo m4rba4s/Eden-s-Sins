@@ -1,0 +1,41 @@
+title: macOS Log Enumeration for Credential Discovery
+id: ct-recon-001
+status: experimental
+description: Detects mass log enumeration commands that may indicate credential hunting in macOS unified logs
+references:
+  - https://attack.mitre.org/techniques/T1005/
+author: The Eden's Sins Purple Team
+date: 2025/01/15
+tags:
+  - attack.discovery
+  - attack.t1005
+  - attack.credential_access
+logsource:
+  category: process_creation
+  product: macos
+detection:
+  selection_log_show:
+    CommandLine|contains:
+      - 'log show'
+      - 'log stream'
+    CommandLine|contains:
+      - 'password'
+      - 'token'
+      - 'secret'
+      - 'credential'
+      - 'api_key'
+      - 'bearer'
+  selection_grep_logs:
+    CommandLine|contains:
+      - 'grep'
+      - 'awk'
+      - 'sed'
+    CommandLine|contains:
+      - '/var/log'
+      - 'DiagnosticReports'
+      - 'unified'
+  condition: selection_log_show or selection_grep_logs
+level: medium
+falsepositives:
+  - Legitimate system administration
+  - Security auditing tools

@@ -1,0 +1,72 @@
+title: macOS TCC Database Access
+id: ct-bypass-001
+status: experimental
+description: Detects direct access to TCC.db or TCC bypass via automation
+references:
+  - https://attack.mitre.org/techniques/T1548/
+author: The Eden's Sins Purple Team
+date: 2025/01/15
+tags:
+  - attack.defense_evasion
+  - attack.t1548
+logsource:
+  category: process_creation
+  product: macos
+detection:
+  selection_tcc_read:
+    CommandLine|contains:
+      - 'TCC.db'
+      - 'TCC/TCC.db'
+      - 'tccutil'
+  selection_tcc_modify:
+    CommandLine|contains:
+      - 'tccutil reset'
+      - 'sqlite3'
+    CommandLine|contains: 'TCC'
+  selection_automation_abuse:
+    CommandLine|contains:
+      - 'osascript'
+      - 'AppleScript'
+    CommandLine|contains:
+      - 'System Events'
+      - 'Accessibility'
+      - 'automation'
+  condition: selection_tcc_read or selection_tcc_modify or selection_automation_abuse
+level: high
+falsepositives:
+  - Security audit tools (this framework!)
+  - MDM management
+---
+title: macOS Keychain Dump Detection
+id: ct-exfil-001
+status: experimental
+description: Detects keychain dump or credential extraction attempts
+references:
+  - https://attack.mitre.org/techniques/T1555/001/
+author: The Eden's Sins Purple Team
+date: 2025/01/15
+tags:
+  - attack.credential_access
+  - attack.t1555.001
+logsource:
+  category: process_creation
+  product: macos
+detection:
+  selection_dump:
+    CommandLine|contains:
+      - 'security dump-keychain'
+      - 'security find-generic-password'
+      - 'security find-internet-password'
+    CommandLine|contains:
+      - '-g'  # Extract password
+      - '-a'  # By account
+      - '-w'  # Password only
+  selection_export:
+    CommandLine|contains:
+      - 'security export'
+      - 'security import'
+  condition: selection_dump or selection_export
+level: critical
+falsepositives:
+  - Legitimate backup tools
+  - Password migration utilities
