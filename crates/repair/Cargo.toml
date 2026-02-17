@@ -1,0 +1,8 @@
+[package]
+name = "eden-repair"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+eden-genome = { path = "../genome" }
+blake3 = { workspace = true }

@@ -1,0 +1,14 @@
+[package]
+name = "eden-nucleus"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+eden-arch = { workspace = true }
+eden-genome = { path = "../genome" }
+eden-mutator = { path = "../mutator" }
+eden-morphogen = { path = "../morphogen" }
+eden-repair = { path = "../repair" }
+eden-transcriber = { path = "../transcriber" }
+eden-fitness = { path = "../fitness" }

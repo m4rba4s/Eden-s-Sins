@@ -1,0 +1,8 @@
+[package]
+name = "eden-genome"
+version = "0.1.0"
+edition.workspace = true
+description = "DNA-like code representation: codons, genes, chromosomes, genome"
+
+[dependencies]
+eden-arch = { workspace = true }

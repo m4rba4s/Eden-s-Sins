@@ -1,3 +1,0 @@
-# The Eden's Sins — Python dependencies
-# Most tools use stdlib only; these are optional for full detection support
-yara-python>=4.3.0
